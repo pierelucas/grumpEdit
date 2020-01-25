@@ -1,10 +1,24 @@
+/*
+ * Copyright 2020 (C) Julian Huch
+ * Autor: Julian Huch
+*/
+
 #include "editor.h"
 
+/* exit Functions that's do same garbage work and exit the programm */
+static void editorExit()
+{
+    disableRawMode();
+    exit(0);
+}
+
+/* Main function. */
 int main(void)
 {
     enableRawMode();
+    
+    readInput();
 
-    char c;
-    while ( read(STDIN_FILENO, &c, 1)  == 1 && c != 'q' );
-    return EXIT_SUCCESS;
+    editorExit();
 }
+
