@@ -3,7 +3,7 @@
  * Autor: Julian Huch
 */
 
-#include "editor.h"
+#include "terminal.h"
 
 /* Struct and pointer definition for the original terminal settings. */
 struct termios orig_termios;
@@ -13,23 +13,30 @@ struct termios* const orig_termiosPtr = &orig_termios;
 struct termios raw;
 struct termios* const rawPtr = &raw;
 
-
-// ____________________________________________________________________________
+/* __________________________________________________________________________*/
 void disableRawMode()
 {
     /*
      * Set the terminal to the original settings, saved in enbaleRawMode().
     */
     tcsetattr(STDIN_FILENO, TCSAFLUSH, orig_termiosPtr);
+    if ( tcsetattr(STDIN_FILENO, TCSAFLUSH, orig_termiosPtr) == -1 )
+    {
+        errorHandler("tcsetattr");
+    }
 }
 
-// ____________________________________________________________________________
+/* __________________________________________________________________________*/
 void enableRawMode()
 {
     /*
-     * Copies the actual terminal settings to the orig_termios struct.
+     * Copies the actual terminal settings to the orig_termios struct
+     * and check throw error if that fails. In example a NULL pointer is given.
     */
-    tcgetattr(STDIN_FILENO, orig_termiosPtr);
+    if ( tcgetattr(STDIN_FILENO, orig_termiosPtr) == -1 )
+    {
+        errorHandler("tcgetattr");
+    }
     
     /*
      * Copies the actual terminal settings to the raw struct.
@@ -78,24 +85,5 @@ void enableRawMode()
      * Set the terminal to the modified settings
     */
     tcsetattr(STDIN_FILENO, TCSAFLUSH, rawPtr);
-}
-
-// ____________________________________________________________________________
-void readInput()
-{
-    char c = '\0';
-    while ( c != 'q' )
-    {
-        c = '\0';
-        read(STDIN_FILENO, &c, 1);
-
-        if ( (iscntrl(c)) ) { fprintf(stdout, "%d\r\n", c); }
-        else { fprintf(stdout, "%d ('%c')\r\n", c, c); }
-
-        /*
-        if ( c == 'q' ) { break; }
-        */
-    }
-    return;
 }
 
