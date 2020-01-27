@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /* 
  * Function that handle's occuring errors and print out the errno message.

@@ -12,8 +12,7 @@
 #include "errorHandler.h"
 
 /* Data structure for saving terminal settings. */
-extern struct termios orig_termios;
-extern struct termios raw;
+#include "data.h"
 
 /* Function for enabling the raw terminal. */
 void enableRawMode();

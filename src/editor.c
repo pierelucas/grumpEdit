@@ -6,9 +6,13 @@
 #include "editor.h"
 
 /*
- * Macro that bitwise and the given integer on the same way that a CTRL Keypress doe.
+ * Macro that bitwise AND the given integer on the same way that a CTRL Keypress doe.
 */
 #define CNTRL_KEY(T) ((T) & 0x1f)
+
+/* Static pointers to our data structures. */
+static struct winsize* const kWSizePtr = &wsize;
+static struct editorConfig* const eConfPtr = &eConf;
 
 /* __________________________________________________________________________*/
 char editorReadKey()
@@ -39,8 +43,43 @@ bool editorProcessKeypress()
 }
 
 /* __________________________________________________________________________*/
+void editorDrawRows()
+{
+    for (int i = 0; i < (*eConfPtr).screenrows; ++i)
+    {
+        write(STDOUT_FILENO, "~\r\n", 3);
+    }
+}
+
+/* __________________________________________________________________________*/
 void editorRefreshScreen()
 {
+    /* 
+     * Escape sequence (1b) + [ + Argument + J. 4 Bytes.
+     * \x1b[2J clear the entire screen.
+     * The 4 means we are writing 4 bytes to the terminal.
+     */
     write(STDOUT_FILENO, "\x1b[2J", 4);
+
+    /* This sequence reposition the cursor on the top. */
+    write(STDOUT_FILENO, "\x1b[H", 3);
+
+    editorDrawRows();
+    write(STDOUT_FILENO, "\x1b[H", 3);
+}
+
+/* __________________________________________________________________________*/
+bool editorGetWindowSize(int* rows, int* cols)
+{
+    if ( ioctl(STDOUT_FILENO, TIOCGWINSZ, kWSizePtr) == 1 || (*kWSizePtr).ws_col == 0 )
+    {
+         return 0;
+    }
+    else
+    {
+        *cols = (*kWSizePtr).ws_col; 
+        *rows = (*kWSizePtr).ws_row;
+        return 1;
+    }
 }
 
