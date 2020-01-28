@@ -1,2 +1,2 @@
-editorMain.o: src/editorMain.c src/terminal.h src/errorHandler.h \
- src/data.h src/editor.h src/appendBuffer.h
+editorMain.o: src/editorMain.c src/errorHandler.h src/editor.h \
+ src/appendBuffer.h

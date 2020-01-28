@@ -1,2 +1,1 @@
-editor.o: src/editor.c src/editor.h src/data.h src/errorHandler.h \
- src/appendBuffer.h
+editor.o: src/editor.c src/editor.h src/errorHandler.h src/appendBuffer.h

@@ -3,24 +3,23 @@
  * Autor: Julian Huch
 */
 
-#include "terminal.h"
 #include "errorHandler.h"
 #include "editor.h"
-#include "data.h"
 
-/* Static pointers to our data structures. */
-static struct editorConfig* const eConfPtr = &eConf;
+/* Global struct definition. */
+static editorconf ee;
+static editorconf* const eConfPtr = &ee;
 
 /* Enable and disable terminal raw mode and do some cleaning work.  */
 static void enableDisableRawMode(int state)
 {
     if ( state == 0 )
     {
-        enableRawMode();
+        enableRawMode(eConfPtr);
     }
     else
     {
-        disableRawMode();
+        disableRawMode(eConfPtr);
         exit(0);
     }
 }
@@ -37,6 +36,9 @@ static void initEditor()
 /* Main function. */
 int main(void)
 {
+    /* Allocate HEAP memory for editor config struct. */
+    /* struct editorConfig* eConfPtr = (struct editorConfig*) malloc(sizeof(struct editorConfig)); */
+
     /* State 1 enables raw mode. */
     enableDisableRawMode(0);
     
@@ -46,7 +48,7 @@ int main(void)
     while ( 1 )
     {
         if ( editorProcessKeypress() == -1 ) break; 
-        editorRefreshScreen();
+        editorRefreshScreen(eConfPtr);
     }
     
     /* Stat 2 disables raw mode and exit. */

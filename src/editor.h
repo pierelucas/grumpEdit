@@ -11,10 +11,25 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 
-#include "data.h"
 #include "errorHandler.h"
 #include "appendBuffer.h"
+
+/* Global editor config. */
+typedef struct _editorConfig_
+{
+    int screenrows;
+    int screencols;
+    struct termios orig_termios;
+    struct termios raw_termios;
+} editorconf;
+
+/* Function for enabling the raw terminal. */
+void enableRawMode(editorconf*);
+
+/* Function for disabling the raw terminal. */
+void disableRawMode(editorconf*);
 
 /* Read Key and thow a error when read fails. */
 char editorReadKey();
@@ -23,10 +38,10 @@ char editorReadKey();
 int editorProcessKeypress();
 
 /* Draw a tilde (~) symbol at the beginning of each line. */
-void editorDrawRows();
+void editorDrawRows(editorconf*);
 
 /* Clearing the screen. */
-void editorRefreshScreen();
+void editorRefreshScreen(editorconf*);
 
 /* Get the actual cursor position. */
 int editorGetCursorPosition(int*, int*);
