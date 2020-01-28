@@ -18,9 +18,17 @@ struct editorConfig
     struct termios raw_termios;
 };
 
-/* Data structures. */
+/* Append Buffer. */
+struct appendBuffer
+{
+    char* b;
+    int len;
+};
+
+/* Data structures init. */
 struct editorConfig eConf;
 struct winsize wsize;
+struct appendBuffer aBuf; 
 
 #endif /* DATA_H_ */
 

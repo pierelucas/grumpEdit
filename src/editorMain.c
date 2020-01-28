@@ -3,8 +3,6 @@
  * Autor: Julian Huch
 */
 
-#include <stdbool.h>
-
 #include "terminal.h"
 #include "errorHandler.h"
 #include "editor.h"
@@ -14,9 +12,9 @@
 static struct editorConfig* const eConfPtr = &eConf;
 
 /* Enable and disable terminal raw mode and do some cleaning work.  */
-static void enableDisableRawMode(bool state)
+static void enableDisableRawMode(int state)
 {
-    if ( state )
+    if ( state == 0 )
     {
         enableRawMode();
     }
@@ -30,7 +28,7 @@ static void enableDisableRawMode(bool state)
 /* Init editor. */
 static void initEditor()
 {
-    if ( !(editorGetWindowSize(&(*eConfPtr).screenrows, &(*eConfPtr).screencols)) )
+    if ( editorGetWindowSize(&(*eConfPtr).screenrows, &(*eConfPtr).screencols) == -1 )
     {
         errorHandler("editorGetWindowSize");
     }
@@ -40,18 +38,18 @@ static void initEditor()
 int main(void)
 {
     /* State 1 enables raw mode. */
-    enableDisableRawMode(1);
+    enableDisableRawMode(0);
     
     /* Call init editor function. */
     initEditor();
     
     while ( 1 )
     {
-        if ( !editorProcessKeypress() ) { break; }
+        if ( editorProcessKeypress() == -1 ) break; 
         editorRefreshScreen();
     }
     
     /* Stat 2 disables raw mode and exit. */
-    enableDisableRawMode(0);
+    enableDisableRawMode(-1);
 }
 
