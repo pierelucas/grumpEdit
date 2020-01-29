@@ -5,13 +5,16 @@
 
 #include "editor.h"
 
+/* grumpEdit version. */
+#define GRUMPEDIT_V "0.1"
+
 /*
  * Macro that bitwise AND the given integer on the same way that a CTRL Keypress doe.
 */
 #define CTRL_KEY(T) ((T) & 0x1f)
 
 /* __________________________________________________________________________*/
-void disableRawMode(editorconf* eConfPtr)
+void disableRawMode(editorconf* const eConfPtr)
 {
     /*
      * Set the terminal to the original settings, saved in enbaleRawMode().
@@ -24,7 +27,7 @@ void disableRawMode(editorconf* eConfPtr)
 }
 
 /* __________________________________________________________________________*/
-void enableRawMode(editorconf* eConfPtr)
+void enableRawMode(editorconf* const eConfPtr)
 {
     /*
      * Copies the actual terminal settings to the orig_termios struct
@@ -100,25 +103,98 @@ char editorReadKey()
 }
 
 /* __________________________________________________________________________*/
-int editorProcessKeypress()
+void editorMoveCursor(editorconf* const eConfPtr, char key)
+{
+    switch ( key )
+    {
+        case CTRL_KEY('h'):
+
+            if ( (*eConfPtr).cursorX != 0 ) (*eConfPtr).cursorX--;
+            break;
+        case CTRL_KEY('l'):
+            if ( (*eConfPtr).cursorX != (*eConfPtr).screencols -1 ) (*eConfPtr).cursorX++;
+            break;
+        case CTRL_KEY('k'):
+            if ( (*eConfPtr).cursorY != 0 ) (*eConfPtr).cursorY--;
+            break;
+        case CTRL_KEY('j'):
+            if ( (*eConfPtr).cursorY != (*eConfPtr).screenrows -1 ) (*eConfPtr).cursorY++;
+            break;
+    }
+}
+
+/* __________________________________________________________________________*/
+int editorProcessKeypress(editorconf* const eConfPtr)
 {
     char c = editorReadKey();
 
     switch (c)
     {
-     case CTRL_KEY('q'):
-         return -1;
+        case CTRL_KEY('q'):
+            return -1;
+
+        case CTRL_KEY('h'):
+        case CTRL_KEY('l'):
+        case CTRL_KEY('k'):
+        case CTRL_KEY('j'):
+            editorMoveCursor(eConfPtr, c); 
+            break;
     }
     return 0;
 }
 
 /* __________________________________________________________________________*/
-void editorDrawRows(editorconf* eConfPtr)
+void editorDrawWelcomeMessage(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
+{
+    /* Define 80xsizeof(char) array for welcome message. */
+    char welcome[80];
+    
+    /*
+     * Count the formated string (same as printf does) as C String in a array.
+     * Return the number of characters that would be written.
+    */
+    int welcomeLen = snprintf(welcome, sizeof(welcome),
+                              "Grump Edit -- VERSION: %s", GRUMPEDIT_V);
+
+    if ( welcomeLen > (*eConfPtr).screencols )
+    {
+        welcomeLen = (*eConfPtr).screencols;
+    }
+
+    int padding = ((*eConfPtr).screencols - welcomeLen) / 2;
+    if ( padding )
+    {
+        aBufferAppend(aBufPtr, "~", 1);
+        padding--;
+    }
+
+    while ( padding-- ) aBufferAppend(aBufPtr, " ", 1);
+    
+    /* Append the welcome message to buffer. */
+    aBufferAppend(aBufPtr, welcome, welcomeLen);
+}
+
+/* __________________________________________________________________________*/
+void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
 {
     int i;
     for (i = 0; i < (*eConfPtr).screenrows; ++i)
     {
-        write(STDOUT_FILENO, "~", 1);
+        if ( i == (*eConfPtr).screenrows / 3 )
+        {
+            editorDrawWelcomeMessage(eConfPtr, aBufPtr);
+        }
+        else
+        {
+            aBufferAppend(aBufPtr, "~", 1);
+        }        
+
+        /* 
+         * Clear the line right of the cursor (0K default argument).
+         * 2K Erases the whole line.
+         * 1K Erased the line left of the cursor.
+        */
+        aBufferAppend(aBufPtr, "\x1b[K", 3);
         
         /*
          * Append '\r\n' to all lines, except the last line.
@@ -127,26 +203,48 @@ void editorDrawRows(editorconf* eConfPtr)
         */
         if ( i < (*eConfPtr).screenrows - 1 )
         {
-            write(STDOUT_FILENO, "\r\n", 2);
+            aBufferAppend(aBufPtr, "\r\n", 2);
         }
     }
 }
 
 /* __________________________________________________________________________*/
-void editorRefreshScreen(editorconf* eConfPtr)
+void editorRefreshScreen(editorconf* const eConfPtr)
 {
+    /* Initialize buffer. */
+    appendbuffer aBuf = { NULL, 0 };
+    appendbuffer* const aBufPtr = &aBuf;
+    
+    /* Hide Cursor before refreshing the screen. */
+    aBufferAppend(aBufPtr, "\x1b[?25l", 6);
+
     /* 
      * Escape sequence (1b) + [ + Argument + J. 4 Bytes.
      * \x1b[2J clear the entire screen.
      * The 4 means we are writing 4 bytes to the terminal.
-     */
-    write(STDOUT_FILENO, "\x1b[2J", 4);
+    aBufferAppend(aBufPtr, "\x1b[2J", 4);
+    */
 
     /* This sequence reposition the cursor on the top. */
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    aBufferAppend(aBufPtr, "\x1b[H", 3);
+    
+    /* Call editorDrawRows. */
+    editorDrawRows(eConfPtr, aBufPtr);
+    
+    /* Write the cursor position to buffer. */
+    char buf[32];
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (*eConfPtr).cursorY + 1,
+             (*eConfPtr).cursorX + 1);
+    aBufferAppend(aBufPtr, buf, strlen(buf));
+    
+    /* Display the cursor after refreshing the screen. */
+    aBufferAppend(aBufPtr, "\x1b[?25h", 6);
+    
+    /* Write out the buffer to STDOUT. */
+    write(STDOUT_FILENO, (*aBufPtr).b, (*aBufPtr).len);
 
-    editorDrawRows(eConfPtr);
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    /* Free memory. */
+    aBufferFree(aBufPtr);
 }
 
 /* __________________________________________________________________________*/

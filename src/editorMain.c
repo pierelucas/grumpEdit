@@ -27,6 +27,10 @@ static void enableDisableRawMode(int state)
 /* Init editor. */
 static void initEditor()
 {
+    /* Initialize the cursor position. */
+    (*eConfPtr).cursorX = 0;    /* X = Column. */
+    (*eConfPtr).cursorY = 0;    /* Y = Row. */
+
     if ( editorGetWindowSize(&(*eConfPtr).screenrows, &(*eConfPtr).screencols) == -1 )
     {
         errorHandler("editorGetWindowSize");
@@ -37,7 +41,7 @@ static void initEditor()
 int main(void)
 {
     /* Allocate HEAP memory for editor config struct. */
-    /* struct editorConfig* eConfPtr = (struct editorConfig*) malloc(sizeof(struct editorConfig)); */
+    /* editorconf* eConfPtr = (editorconf*) malloc(sizeof(editorconf)); */
 
     /* State 1 enables raw mode. */
     enableDisableRawMode(0);
@@ -45,11 +49,10 @@ int main(void)
     /* Call init editor function. */
     initEditor();
     
-    while ( 1 )
+    do
     {
-        if ( editorProcessKeypress() == -1 ) break; 
         editorRefreshScreen(eConfPtr);
-    }
+    } while ( editorProcessKeypress(eConfPtr) != -1 );
     
     /* Stat 2 disables raw mode and exit. */
     enableDisableRawMode(-1);

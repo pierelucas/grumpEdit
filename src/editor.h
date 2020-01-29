@@ -19,29 +19,35 @@
 /* Global editor config. */
 typedef struct _editorConfig_
 {
-    int screenrows;
-    int screencols;
+    int cursorX, cursorY;
+    int screenrows, screencols;
     struct termios orig_termios;
     struct termios raw_termios;
 } editorconf;
 
 /* Function for enabling the raw terminal. */
-void enableRawMode(editorconf*);
+void enableRawMode(editorconf* const);
 
 /* Function for disabling the raw terminal. */
-void disableRawMode(editorconf*);
+void disableRawMode(editorconf* const);
 
 /* Read Key and thow a error when read fails. */
 char editorReadKey();
 
+/* Move the cursor around. */
+void editorMoveCursor(editorconf* const, char);
+
 /* Process keypresses e.g keys and control keys. */
-int editorProcessKeypress();
+int editorProcessKeypress(editorconf* const);
+
+/* Draw a fancy welcome message. */
+void editorDrawWelcomeMessage(editorconf* const, appendbuffer* const);
 
 /* Draw a tilde (~) symbol at the beginning of each line. */
-void editorDrawRows(editorconf*);
+void editorDrawRows(editorconf* const, appendbuffer* const);
 
 /* Clearing the screen. */
-void editorRefreshScreen(editorconf*);
+void editorRefreshScreen(editorconf* const);
 
 /* Get the actual cursor position. */
 int editorGetCursorPosition(int*, int*);

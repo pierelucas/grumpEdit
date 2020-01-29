@@ -9,18 +9,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Append Buffer. */
-struct appendBuffer
+/*
+ * Append buffer.
+ * Please initialize the struct with {NULL, 0} to work properly.
+*/
+typedef struct _appendBuffer_
 {
     char* b;
     int len;
-};
+} appendbuffer;
 
-extern struct appendBuffer aBuf;
+/* Allocate new memory for s, append and copy in the appendbuffer. */
+void aBufferAppend(appendbuffer* const, const char*, int);
 
-void aBufferAppend(struct appendBuffer*, const char*, int);
-
-void aBufferFree(struct appendBuffer*);
+/* Free allocated appendbuffer memory. */
+void aBufferFree(appendbuffer* const);
 
 #endif /* APPENDBUFFER_H_ */
 

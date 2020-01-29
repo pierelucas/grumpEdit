@@ -6,7 +6,7 @@
 #include "appendBuffer.h"
 
 /* __________________________________________________________________________*/
-void aBufferAppend(struct appendBuffer* ab, const char* s, int len)
+void aBufferAppend(appendbuffer* const ab, const char* s, int len)
 {
     char* new = realloc((*ab).b, (*ab).len + len);
 
@@ -17,7 +17,7 @@ void aBufferAppend(struct appendBuffer* ab, const char* s, int len)
 }
 
 /* __________________________________________________________________________*/
-void aBufferFree(struct appendBuffer* ab)
+void aBufferFree(appendbuffer* const ab)
 {
     free((*ab).b);
 }
