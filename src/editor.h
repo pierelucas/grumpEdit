@@ -6,6 +6,11 @@
 #ifndef EDITOR_H_
 #define EDITOR_H_
 
+/*
+ * Macro that bitwise AND the given integer on the same way that a CTRL Keypress doe.
+*/
+#define CTRL_KEY(T) ((T) & 0x1f)
+
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -15,6 +20,7 @@
 
 #include "errorHandler.h"
 #include "appendBuffer.h"
+#include "version.h"    /* This header holds some const variables. */
 
 /* Global editor config. */
 typedef struct _editorConfig_
@@ -25,6 +31,18 @@ typedef struct _editorConfig_
     struct termios raw_termios;
 } editorconf;
 
+/* Constant for Key sqeuences. */
+enum editorKeys
+{
+    QUIT_EDITOR = CTRL_KEY('q'),
+    ARROW_LEFT = CTRL_KEY('h'),   /* 1000 */
+    ARROW_RIGHT = CTRL_KEY('l'),  /* 1001 */
+    ARROW_UP = CTRL_KEY('k'),     /* 1002 */
+    ARROW_DOWN = CTRL_KEY('j'),    /* 1003 */
+    PAGE_UP = 1004,
+    PAGE_DOWN = 1005
+};
+
 /* Function for enabling the raw terminal. */
 void enableRawMode(editorconf* const);
 
@@ -32,10 +50,10 @@ void enableRawMode(editorconf* const);
 void disableRawMode(editorconf* const);
 
 /* Read Key and thow a error when read fails. */
-char editorReadKey();
+int editorReadKey();
 
 /* Move the cursor around. */
-void editorMoveCursor(editorconf* const, char);
+void editorMoveCursor(editorconf* const, int);
 
 /* Process keypresses e.g keys and control keys. */
 int editorProcessKeypress(editorconf* const);

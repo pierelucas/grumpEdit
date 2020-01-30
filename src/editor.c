@@ -5,14 +5,6 @@
 
 #include "editor.h"
 
-/* grumpEdit version. */
-#define GRUMPEDIT_V "0.1"
-
-/*
- * Macro that bitwise AND the given integer on the same way that a CTRL Keypress doe.
-*/
-#define CTRL_KEY(T) ((T) & 0x1f)
-
 /* __________________________________________________________________________*/
 void disableRawMode(editorconf* const eConfPtr)
 {
@@ -88,7 +80,7 @@ void enableRawMode(editorconf* const eConfPtr)
 }
 
 /* __________________________________________________________________________*/
-char editorReadKey()
+int editorReadKey()
 {
     int nread;
     char c;
@@ -99,25 +91,88 @@ char editorReadKey()
             errorHandler("read");
         }
     }
-    return c;
+    
+    /* Check if 'c' is an escape sequence. */
+    if ( c == '\x1b' )
+    {
+        char sequence[3];
+        
+        /* 
+         * Read the next two characters from bufffer in our sequence variable.
+         * Return an escape when read timeout (means buffer is empty).
+        */
+        if ( read(STDIN_FILENO, &(*(sequence+0)), 1) != 1 ) return '\x1b';
+        if ( read(STDIN_FILENO, &(*(sequence+1)), 1) != 1 ) return '\x1b';
+        
+        /*
+         * When the next byte is a [ start to read the arguments, provided with
+         * the escape sequence. (A key like ARROW or PAGE is pressed.)
+        */
+        if ( *(sequence+0) == '[')
+        {
+            if ( *(sequence+1) >= '0' && *(sequence+1) <= '9')
+            {
+                /*
+                 * Read the next character from buffer in our sequence variable.
+                 * Return an escape when read timeout (means buffer is empty).
+                */
+                if ( read(STDIN_FILENO, &(*(sequence+2)), 1) != 1 ) return '\x1b';
+                /*
+                 * Check if the last character is an '~'.
+                 * The escape sequence from the keys PAGE_UP and PAGE_DOWN is
+                 * '\x1b[5~' and '\x1b[6~'.
+                */
+                if ( *(sequence+2) == '~' )
+                {
+                    switch ( *(sequence+1) )
+                    {
+                        case '5': return PAGE_UP;
+                        case '6': return PAGE_DOWN;
+                    }
+                }
+            }
+            /*
+             * The escape sequence from ARROW_KEY are
+             * e.g. '\x1b[A' for ARROW_UP.
+            */ 
+            switch ( *(sequence+1) )
+            {
+                case 'A': return ARROW_UP;
+                case 'B': return ARROW_DOWN;
+                case 'C': return ARROW_RIGHT;
+                case 'D': return ARROW_LEFT;
+            }
+        }
+        /* When the next byte isn't a '[’ return escape. */
+        return '\x1b';
+    }
+    /* When c is not a escape sequence, return c. */
+    else
+    {
+        return c;
+    }
 }
 
 /* __________________________________________________________________________*/
-void editorMoveCursor(editorconf* const eConfPtr, char key)
+void editorMoveCursor(editorconf* const eConfPtr, int key)
 {
+    /*
+     * Don't let the cursor be out of window. The documentation say that's
+     * undefined what happens, when the cursor get out of the window.
+     * Increment or decrement the CursorX and CursorY value.
+    */
     switch ( key )
     {
-        case CTRL_KEY('h'):
-
+        case ARROW_LEFT:
             if ( (*eConfPtr).cursorX != 0 ) (*eConfPtr).cursorX--;
             break;
-        case CTRL_KEY('l'):
+        case ARROW_RIGHT:
             if ( (*eConfPtr).cursorX != (*eConfPtr).screencols -1 ) (*eConfPtr).cursorX++;
             break;
-        case CTRL_KEY('k'):
+        case ARROW_UP:
             if ( (*eConfPtr).cursorY != 0 ) (*eConfPtr).cursorY--;
             break;
-        case CTRL_KEY('j'):
+        case ARROW_DOWN:
             if ( (*eConfPtr).cursorY != (*eConfPtr).screenrows -1 ) (*eConfPtr).cursorY++;
             break;
     }
@@ -126,19 +181,29 @@ void editorMoveCursor(editorconf* const eConfPtr, char key)
 /* __________________________________________________________________________*/
 int editorProcessKeypress(editorconf* const eConfPtr)
 {
-    char c = editorReadKey();
+    int c = editorReadKey();
 
     switch (c)
     {
-        case CTRL_KEY('q'):
+        case QUIT_EDITOR:
             return -1;
-
-        case CTRL_KEY('h'):
-        case CTRL_KEY('l'):
-        case CTRL_KEY('k'):
-        case CTRL_KEY('j'):
+        
+        case ARROW_LEFT:
+        case ARROW_RIGHT:
+        case ARROW_UP:
+        case ARROW_DOWN:
             editorMoveCursor(eConfPtr, c); 
             break;
+        case PAGE_UP:
+        case PAGE_DOWN:
+            {
+                int times = (*eConfPtr).screenrows;
+                while ( times-- )
+                {
+                    editorMoveCursor(eConfPtr, c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+                }
+                break;
+            }
     }
     return 0;
 }
