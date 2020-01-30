@@ -86,7 +86,7 @@ int editorGetCursorPosition(int*, int*);
 int editorGetWindowSize(int*, int*);
 
 /* Open a file. */
-void editorOpen(editorconf* const);
+void editorOpen(editorconf* const, char* const);
 
 #endif /* EDITOR_H_ */
 

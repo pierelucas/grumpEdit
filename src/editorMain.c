@@ -3,12 +3,26 @@
  * Autor: Julian Huch
 */
 
+#include <getopt.h>
+
 #include "errorHandler.h"
 #include "editor.h"
 
 /* Global struct definition. */
 static editorconf ee;
 static editorconf* const eConfPtr = &ee;
+
+static char* parseCommandLineArguments(int argc, char** argv)
+{
+    int opt = getopt(argc, argv, ":f:");
+
+    while ( opt != -1 )
+    {
+        // TODO
+        return "peter";
+    }
+    return "peter";
+}
 
 /* Enable and disable terminal raw mode and do some cleaning work.  */
 static void enableDisableRawMode(int state)
@@ -39,8 +53,21 @@ static void initEditor()
 }
 
 /* Main function. */
-int main(void)
+int main(int argc, char** argv)
 {
+    char* filename;
+    if ( argc != 0 )
+    {
+        filename = parseCommandLineArguments(argc, argv);
+    }
+    else
+    {
+        filename = NULL;
+    }
+    
+    /* Cast filename to constant. */
+    filename = (char* const) filename;
+
     /* Allocate HEAP memory for editor config struct. */
     /* editorconf* eConfPtr = (editorconf*) malloc(sizeof(editorconf)); */
 
@@ -51,7 +78,7 @@ int main(void)
     initEditor();
 
     /* Open file. */
-    editorOpen(eConfPtr);
+    editorOpen(eConfPtr, filename);
     
     do
     {

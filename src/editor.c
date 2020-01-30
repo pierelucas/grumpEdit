@@ -286,14 +286,29 @@ void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
     int i;
     for (i = 0; i < (*eConfPtr).screenrows; ++i)
     {
-        if ( i == (*eConfPtr).screenrows / 3 )
+        /* 
+         * Call 'editorDrawWelcomeMessage' at middle of the window height and 
+         * after the rows print out from the global editorConfig datastructure.
+         * When the datastructure is empty start from the top.
+        */
+        if ( i >= (*eConfPtr).numrows )
         {
-            editorDrawWelcomeMessage(eConfPtr, aBufPtr);
+            if ( i == (*eConfPtr).screenrows / 3 )
+            {
+                editorDrawWelcomeMessage(eConfPtr, aBufPtr);
+            }
+            else
+            {
+                aBufferAppend(aBufPtr, "~", 1);
+            }        
         }
+        /* When the datastructure is not empty write the rows to the buffer. */
         else
         {
-            aBufferAppend(aBufPtr, "~", 1);
-        }        
+            int len = (*eConfPtr).row.size;
+            if ( len > (*eConfPtr).screencols ) len = (*eConfPtr).screencols;
+            aBufferAppend(aBufPtr, (*eConfPtr).row.chars, len);
+        }
 
         /* 
          * Clear the line right of the cursor (0K default argument).
@@ -415,13 +430,13 @@ int editorGetWindowSize(int* rows, int* cols)
 }
 
 /* __________________________________________________________________________*/
-void editorOpen(editorconf* const eConfPtr)
+void editorOpen(editorconf* const eConfPtr, char* const filename)
 {
     char* line = "Hello, World!";
     ssize_t linelen = 13;
 
     (*eConfPtr).row.size = linelen;
-    (*eConfPtr).row.chars = malloc(linelen + 1);
+    (*eConfPtr).row.chars = (char*) malloc(linelen + 1);
     memcpy((*eConfPtr).row.chars, line, linelen);
     *((*eConfPtr).row.chars + linelen) = '\0';
     (*eConfPtr).numrows = 1;
