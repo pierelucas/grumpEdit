@@ -2,7 +2,7 @@
 # Autor: Julian Huch
 
 # Target Name
-TARGET 		:= editorProg
+TARGET 		:= grumpEditor
 
 # Target directory
 TARGET_DIR 	:= bin
