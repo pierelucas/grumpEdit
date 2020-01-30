@@ -4,6 +4,7 @@
 */
 
 #include "editor.h"
+#include "version.h"    /* This header holds some const variables. */
 
 /* __________________________________________________________________________*/
 void disableRawMode(editorconf* const eConfPtr)
@@ -105,8 +106,7 @@ int editorReadKey()
         if ( read(STDIN_FILENO, &(*(sequence+1)), 1) != 1 ) return '\x1b';
         
         /*
-         * When the next byte is a [ start to read the arguments, provided with
-         * the escape sequence. (A key like ARROW or PAGE is pressed.)
+         * When the next byte is a [ start to read the escape sequence arguments. 
         */
         if ( *(sequence+0) == '[')
         {
@@ -119,29 +119,60 @@ int editorReadKey()
                 if ( read(STDIN_FILENO, &(*(sequence+2)), 1) != 1 ) return '\x1b';
                 /*
                  * Check if the last character is an '~'.
-                 * The escape sequence from the keys PAGE_UP and PAGE_DOWN is
-                 * '\x1b[5~' and '\x1b[6~'.
+                 * The escape sequence from the keys:
+                 * '\x1b[5~' PAGE_UP
+                 * '\x1b[6~' PAGE_DOWN
+                 * '\x1b[1~' HOME_KEY
+                 * '\x1b[7~' HOME_KEY
+                 * '\x1b[4~' END_KEY
+                 * '\x1b[8~' END_KEY
                 */
                 if ( *(sequence+2) == '~' )
                 {
                     switch ( *(sequence+1) )
                     {
+                        case '1': return HOME_KEY;
+                        case '3': return DEL_KEY;
+                        case '4': return END_KEY;
                         case '5': return PAGE_UP;
                         case '6': return PAGE_DOWN;
+                        case '7': return HOME_KEY;
+                        case '8': return END_KEY;
                     }
                 }
             }
             /*
-             * The escape sequence from ARROW_KEY are
-             * e.g. '\x1b[A' for ARROW_UP.
-            */ 
+             * The escape sequence from the keys:
+             * '\x1b[A' ARROW_UP
+             * '\x1b[B' ARROW_DOWN
+             * '\x1b[C' ARROW_RIGHT
+             * '\x1b[D' ARROW_LEFT
+             * '\x1b[H' HOME_KEY
+             * '\x1b[F' END_KEY
+            */
             switch ( *(sequence+1) )
             {
                 case 'A': return ARROW_UP;
                 case 'B': return ARROW_DOWN;
                 case 'C': return ARROW_RIGHT;
                 case 'D': return ARROW_LEFT;
+                case 'H': return HOME_KEY;
+                case 'F': return END_KEY;
             }
+        }
+        /* When the next byte is 'O' ... */
+        else if ( *(sequence+0) == 'O' )
+        {
+            /*
+             * The escape sequence from the keys:
+             * '\x1bOH' HOME_KEY
+             * '\x1bOF' END_KEY
+            */
+            switch ( *(sequence+1) )
+            {
+                case 'H': return HOME_KEY;
+                case 'F': return END_KEY;
+            } 
         }
         /* When the next byte isn't a '[’ return escape. */
         return '\x1b';
@@ -188,12 +219,14 @@ int editorProcessKeypress(editorconf* const eConfPtr)
         case QUIT_EDITOR:
             return -1;
         
-        case ARROW_LEFT:
-        case ARROW_RIGHT:
-        case ARROW_UP:
-        case ARROW_DOWN:
-            editorMoveCursor(eConfPtr, c); 
-            break;
+        case HOME_KEY:
+           (*eConfPtr).cursorX = 0;
+           break;
+        case END_KEY:
+           (*eConfPtr).cursorX = (*eConfPtr).screencols - 1;
+           break;
+        
+        /* Set the cursor to the top and end when PAGE_UP or PAGE_DOWN is pressed. */ 
         case PAGE_UP:
         case PAGE_DOWN:
             {
@@ -204,6 +237,14 @@ int editorProcessKeypress(editorconf* const eConfPtr)
                 }
                 break;
             }
+        
+        /* When a ARROW_KEY is pressed call 'editorMoveCursor'. */
+        case ARROW_LEFT:
+        case ARROW_RIGHT:
+        case ARROW_UP:
+        case ARROW_DOWN:
+            editorMoveCursor(eConfPtr, c); 
+            break;
     }
     return 0;
 }
@@ -371,5 +412,18 @@ int editorGetWindowSize(int* rows, int* cols)
         *rows = wSize.ws_row;
         return 0;
     }
+}
+
+/* __________________________________________________________________________*/
+void editorOpen(editorconf* const eConfPtr)
+{
+    char* line = "Hello, World!";
+    ssize_t linelen = 13;
+
+    (*eConfPtr).row.size = linelen;
+    (*eConfPtr).row.chars = malloc(linelen + 1);
+    memcpy((*eConfPtr).row.chars, line, linelen);
+    *((*eConfPtr).row.chars + linelen) = '\0';
+    (*eConfPtr).numrows = 1;
 }
 

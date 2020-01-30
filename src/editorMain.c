@@ -30,6 +30,7 @@ static void initEditor()
     /* Initialize the cursor position. */
     (*eConfPtr).cursorX = 0;    /* X = Column. */
     (*eConfPtr).cursorY = 0;    /* Y = Row. */
+    (*eConfPtr).numrows = 0;
 
     if ( editorGetWindowSize(&(*eConfPtr).screenrows, &(*eConfPtr).screencols) == -1 )
     {
@@ -48,6 +49,9 @@ int main(void)
     
     /* Call init editor function. */
     initEditor();
+
+    /* Open file. */
+    editorOpen(eConfPtr);
     
     do
     {

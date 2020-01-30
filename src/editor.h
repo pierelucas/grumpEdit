@@ -16,17 +16,26 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <termios.h>
 
 #include "errorHandler.h"
 #include "appendBuffer.h"
-#include "version.h"    /* This header holds some const variables. */
+
+/* Data structure for storing editor rows. */
+typedef struct _editorRow_
+{
+    int size;
+    char* chars;
+} editorrow;
 
 /* Global editor config. */
 typedef struct _editorConfig_
 {
     int cursorX, cursorY;
     int screenrows, screencols;
+    int numrows;
+    editorrow row;
     struct termios orig_termios;
     struct termios raw_termios;
 } editorconf;
@@ -39,8 +48,11 @@ enum editorKeys
     ARROW_RIGHT = CTRL_KEY('l'),  /* 1001 */
     ARROW_UP = CTRL_KEY('k'),     /* 1002 */
     ARROW_DOWN = CTRL_KEY('j'),    /* 1003 */
-    PAGE_UP = 1004,
-    PAGE_DOWN = 1005
+    DEL_KEY = 1004,
+    HOME_KEY = 1005,
+    END_KEY = 1006,
+    PAGE_UP = 1007,
+    PAGE_DOWN = 1008
 };
 
 /* Function for enabling the raw terminal. */
@@ -72,6 +84,9 @@ int editorGetCursorPosition(int*, int*);
 
 /* Get the actual terminal window size with ioctl which calls TIICGWINSZ. */
 int editorGetWindowSize(int*, int*);
+
+/* Open a file. */
+void editorOpen(editorconf* const);
 
 #endif /* EDITOR_H_ */
 
