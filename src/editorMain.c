@@ -3,6 +3,12 @@
  * Autor: Julian Huch
 */
 
+/*
+ * TODO:
+ * There's only one line printed, fix that!
+ * https://viewsourcecode.org/snaptoken/kilo/04.aTextViewer.html
+*/
+
 #include <getopt.h>
 
 #include "errorHandler.h"
