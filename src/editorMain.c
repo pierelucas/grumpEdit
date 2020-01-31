@@ -18,12 +18,14 @@ static char* kfilename;
 /* Parse command line arguments- */
 static char* parseCommandLineArguments(int argc, char** argv)
 {
+    /*
     if ( argc == 1 )
     {
         fprintf(stdout, "One argument needed.\n");
         fprintf(stdout, "-h         -- for help message.\n");
         exit(1);
     }
+    */
 
     int opt = getopt(argc, argv, ":hf:");
     while ( opt != -1 )
@@ -46,21 +48,7 @@ static char* parseCommandLineArguments(int argc, char** argv)
              exit(1);
         }
     }
-    exit(1);
-}
-
-/* Enable and disable terminal raw mode and do some cleaning work.  */
-static void enableDisableRawMode(int state)
-{
-    if ( state == 0 )
-    {
-        enableRawMode(eConfPtr);
-    }
-    else
-    {
-        disableRawMode(eConfPtr);
-        exit(0);
-    }
+    return NULL;
 }
 
 /* Init editor. */
@@ -89,7 +77,7 @@ int main(int argc, char** argv)
     /* editorconf* eConfPtr = (editorconf*) malloc(sizeof(editorconf)); */
 
     /* State 1 enables raw mode. */
-    enableDisableRawMode(0);
+    enableRawMode(eConfPtr);
     
     /* Call init editor function. */
     initEditor();
@@ -102,7 +90,10 @@ int main(int argc, char** argv)
         editorRefreshScreen(eConfPtr);
     } while ( editorProcessKeypress(eConfPtr) != -1 );
     
-    /* Stat 2 disables raw mode and exit. */
-    enableDisableRawMode(-1);
+    /* Disable raw mode & reset terminal. */
+    disableRawMode(eConfPtr);
+
+    /* Exit successfully. */
+    return EXIT_SUCCESS;
 }
 

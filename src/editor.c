@@ -442,7 +442,14 @@ void editorOpen(editorconf* const eConfPtr, char* const filename)
     (*eConfPtr).numrows = 1;
     */
 
-    FILE* fp = fopen(filename, "r");
+    /* Return when the filename is NULL. */
+    if ( filename == NULL ) return;
+
+    /* Declare FILE pointer and open file. */
+    FILE* fp;
+    fp = fopen(filename, "r");
+
+    /* When it's not possible to allcate for file then throw a error. */
     if ( fp == NULL ) errorHandler("fopen");
 
     char* line = NULL;
@@ -463,8 +470,11 @@ void editorOpen(editorconf* const eConfPtr, char* const filename)
         *((*eConfPtr).row.chars+linelen) = '\0';
         (*eConfPtr).numrows = 1;
     }
-
+    
+    /* Free allocated memory. */
     free(line);
+
+    /* Close file. */
     fclose(fp);
 }
 
