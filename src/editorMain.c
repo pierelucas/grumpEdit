@@ -8,20 +8,45 @@
 #include "errorHandler.h"
 #include "editor.h"
 
-/* Global struct definition. */
+/* Struct definition. */
 static editorconf ee;
 static editorconf* const eConfPtr = &ee;
 
+/* Filename */
+static char* kfilename;
+
+/* Parse command line arguments- */
 static char* parseCommandLineArguments(int argc, char** argv)
 {
-    int opt = getopt(argc, argv, ":f:");
+    if ( argc == 1 )
+    {
+        fprintf(stdout, "One argument needed.\n");
+        fprintf(stdout, "-h         -- for help message.\n");
+        exit(1);
+    }
 
+    int opt = getopt(argc, argv, ":hf:");
     while ( opt != -1 )
     {
-        // TODO
-        return "peter";
+        switch (opt)
+        {
+         case 'h':
+             fprintf(stdout, "HELP\n");
+             fprintf(stdout, "Options:\n");
+             fprintf(stdout, "%10s -f <filename>    -- specify file.\n", *(argv+0));
+             fprintf(stdout, "%10s -h               -- for help message.\n", *(argv+0));
+             exit(1);
+        case 'f':
+             return optarg;
+        case ':':
+             fprintf(stdout, "option: %c needs a value.\n", optopt);
+             exit(1);
+        case '?':
+             fprintf(stdout, "unknown option: %c\n", optopt);
+             exit(1);
+        }
     }
-    return "peter";
+    exit(1);
 }
 
 /* Enable and disable terminal raw mode and do some cleaning work.  */
@@ -55,18 +80,10 @@ static void initEditor()
 /* Main function. */
 int main(int argc, char** argv)
 {
-    char* filename;
-    if ( argc != 0 )
-    {
-        filename = parseCommandLineArguments(argc, argv);
-    }
-    else
-    {
-        filename = NULL;
-    }
+    kfilename = parseCommandLineArguments(argc, argv);
     
-    /* Cast filename to constant. */
-    filename = (char* const) filename;
+    /* Cast kfilename to constant pointer */
+    kfilename = (char* const) kfilename;
 
     /* Allocate HEAP memory for editor config struct. */
     /* editorconf* eConfPtr = (editorconf*) malloc(sizeof(editorconf)); */
@@ -78,7 +95,7 @@ int main(int argc, char** argv)
     initEditor();
 
     /* Open file. */
-    editorOpen(eConfPtr, filename);
+    editorOpen(eConfPtr, kfilename);
     
     do
     {

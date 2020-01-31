@@ -11,6 +11,13 @@
 */
 #define CTRL_KEY(T) ((T) & 0x1f)
 
+/*
+ * Feature test macro.
+*/
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>

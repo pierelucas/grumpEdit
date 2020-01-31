@@ -287,13 +287,12 @@ void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
     for (i = 0; i < (*eConfPtr).screenrows; ++i)
     {
         /* 
-         * Call 'editorDrawWelcomeMessage' at middle of the window height and 
-         * after the rows print out from the global editorConfig datastructure.
-         * When the datastructure is empty start from the top.
+         * Call 'editorDrawWelcomeMessage' at middle of the window height
+         * when there's no data readed.
         */
         if ( i >= (*eConfPtr).numrows )
         {
-            if ( i == (*eConfPtr).screenrows / 3 )
+            if ( (*eConfPtr).numrows == 0 && i == (*eConfPtr).screenrows / 3 )
             {
                 editorDrawWelcomeMessage(eConfPtr, aBufPtr);
             }
@@ -432,6 +431,7 @@ int editorGetWindowSize(int* rows, int* cols)
 /* __________________________________________________________________________*/
 void editorOpen(editorconf* const eConfPtr, char* const filename)
 {
+    /*
     char* line = "Hello, World!";
     ssize_t linelen = 13;
 
@@ -440,5 +440,31 @@ void editorOpen(editorconf* const eConfPtr, char* const filename)
     memcpy((*eConfPtr).row.chars, line, linelen);
     *((*eConfPtr).row.chars + linelen) = '\0';
     (*eConfPtr).numrows = 1;
+    */
+
+    FILE* fp = fopen(filename, "r");
+    if ( fp == NULL ) errorHandler("fopen");
+
+    char* line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    linelen = getline(&line, &linecap, fp);
+
+    if ( linelen != -1 )
+    {
+        for ( ; linelen > 0 && ( *(line+(linelen-1)) == '\n' ||
+                                 *(line+(linelen-1)) == '\r');
+                                 linelen--);
+    
+
+        (*eConfPtr).row.size = linelen;
+        (*eConfPtr).row.chars = (char*) malloc(linelen + 1);
+        memcpy((*eConfPtr).row.chars, line, linelen);
+        *((*eConfPtr).row.chars+linelen) = '\0';
+        (*eConfPtr).numrows = 1;
+    }
+
+    free(line);
+    fclose(fp);
 }
 
