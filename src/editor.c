@@ -304,9 +304,9 @@ void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
         /* When the datastructure is not empty write the rows to the buffer. */
         else
         {
-            int len = (*eConfPtr).row.size;
+            int len = (*(((*eConfPtr).row)+i)).size;    /* Is the same as 'eConfPtr->row[i]->size' */
             if ( len > (*eConfPtr).screencols ) len = (*eConfPtr).screencols;
-            aBufferAppend(aBufPtr, (*eConfPtr).row.chars, len);
+            aBufferAppend(aBufPtr, (*(((*eConfPtr).row)+i)).chars, len);    /* Is the same as 'eConfPtr->row[i]->chars' */
         }
 
         /* 
@@ -429,6 +429,19 @@ int editorGetWindowSize(int* rows, int* cols)
 }
 
 /* __________________________________________________________________________*/
+void editorAppendRow(editorconf* const eConfPtr, char* s, size_t len)
+{
+    /* Re-allocate memory to add a new editorrow at the end of the editorrow array. */
+    (*eConfPtr).row = (editorrow*) realloc((*eConfPtr).row, sizeof(editorrow) * ((*eConfPtr).numrows + 1));
+
+    (*(*eConfPtr).row).size = len;      /* Is the same as 'eContPtr->row->size' */
+    (*(*eConfPtr).row).chars = (char*) malloc(len+1);
+    memcpy((*(*eConfPtr).row).chars, s, len);
+    *((*(*eConfPtr).row).chars+len) = '\0';     /* Is the same as 'eConftPtr->row->chars[len]' */
+    (*eConfPtr).numrows++;
+}
+
+/* __________________________________________________________________________*/
 void editorOpen(editorconf* const eConfPtr, char* const filename)
 {
     /*
@@ -455,22 +468,20 @@ void editorOpen(editorconf* const eConfPtr, char* const filename)
     char* line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
-    linelen = getline(&line, &linecap, fp);
 
-    if ( linelen != -1 )
+    /* Read every line till end of file is reached. */
+    while ( (linelen = getline(&line, &linecap, fp)) != -1 )
     {
-        for ( ; linelen > 0 && ( *(line+(linelen-1)) == '\n' ||
-                                 *(line+(linelen-1)) == '\r');
-                                 linelen--);
-    
+        if ( linelen != -1 )
+        {
+            for ( ; linelen > 0 && ( *(line+(linelen-1)) == '\n' ||
+                                     *(line+(linelen-1)) == '\r');
+                                     linelen--);
 
-        (*eConfPtr).row.size = linelen;
-        (*eConfPtr).row.chars = (char*) malloc(linelen + 1);
-        memcpy((*eConfPtr).row.chars, line, linelen);
-        *((*eConfPtr).row.chars+linelen) = '\0';
-        (*eConfPtr).numrows = 1;
-    }
-    
+            /* Call editorAppendRow. */
+            editorAppendRow(eConfPtr, line, linelen);    
+        }
+    } 
     /* Free allocated memory. */
     free(line);
 

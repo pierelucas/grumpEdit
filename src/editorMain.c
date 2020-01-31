@@ -58,6 +58,7 @@ static void initEditor()
     (*eConfPtr).cursorX = 0;    /* X = Column. */
     (*eConfPtr).cursorY = 0;    /* Y = Row. */
     (*eConfPtr).numrows = 0;
+    (*eConfPtr).row = NULL;
 
     if ( editorGetWindowSize(&(*eConfPtr).screenrows, &(*eConfPtr).screencols) == -1 )
     {

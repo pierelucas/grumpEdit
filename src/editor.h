@@ -42,7 +42,7 @@ typedef struct _editorConfig_
     int cursorX, cursorY;
     int screenrows, screencols;
     int numrows;
-    editorrow row;
+    editorrow* row;
     struct termios orig_termios;
     struct termios raw_termios;
 } editorconf;
@@ -91,6 +91,9 @@ int editorGetCursorPosition(int*, int*);
 
 /* Get the actual terminal window size with ioctl which calls TIICGWINSZ. */
 int editorGetWindowSize(int*, int*);
+
+/* Append row. */
+void editorAppendRow(editorconf* const, char*, size_t);
 
 /* Open a file. */
 void editorOpen(editorconf* const, char* const);
