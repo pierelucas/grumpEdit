@@ -371,7 +371,7 @@ void editorRefreshScreen(editorconf* const eConfPtr)
     
     /* Write the cursor position to buffer. */
     char buf[32];
-    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (*eConfPtr).cursorY + 1,
+    snprintf(buf, sizeof(buf), "\x1b[%d;%dH", ((*eConfPtr).cursorY - (*eConfPtr).rowoff) + 1,
              (*eConfPtr).cursorX + 1);
     aBufferAppend(aBufPtr, buf, strlen(buf));
     
