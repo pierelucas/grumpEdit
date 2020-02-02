@@ -40,6 +40,7 @@ typedef struct _editorRow_
 typedef struct _editorConfig_
 {
     int cursorX, cursorY;
+    int rowoff;
     int screenrows, screencols;
     int numrows;
     editorrow* row;
@@ -76,6 +77,9 @@ void editorMoveCursor(editorconf* const, int);
 
 /* Process keypresses e.g keys and control keys. */
 int editorProcessKeypress(editorconf* const);
+
+/* Scroll trough the window. */
+void editorScroll(editorconf* const);
 
 /* Draw a fancy welcome message. */
 void editorDrawWelcomeMessage(editorconf* const, appendbuffer* const);

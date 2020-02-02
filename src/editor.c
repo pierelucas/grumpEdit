@@ -204,7 +204,7 @@ void editorMoveCursor(editorconf* const eConfPtr, int key)
             if ( (*eConfPtr).cursorY != 0 ) (*eConfPtr).cursorY--;
             break;
         case ARROW_DOWN:
-            if ( (*eConfPtr).cursorY != (*eConfPtr).screenrows -1 ) (*eConfPtr).cursorY++;
+            if ( (*eConfPtr).cursorY < (*eConfPtr).numrows ) (*eConfPtr).cursorY++;
             break;
     }
 }
@@ -250,6 +250,20 @@ int editorProcessKeypress(editorconf* const eConfPtr)
 }
 
 /* __________________________________________________________________________*/
+void editorScroll(editorconf* const eConfPtr)
+{
+    if ( (*eConfPtr).cursorY < (*eConfPtr).rowoff )
+    {
+        (*eConfPtr).rowoff = (*eConfPtr).cursorY;
+    }
+
+    if ( (*eConfPtr).cursorY >= (*eConfPtr).rowoff + (*eConfPtr).screenrows )
+    {
+        (*eConfPtr).rowoff = (*eConfPtr).cursorY - (*eConfPtr).screenrows + 1;
+    }
+}
+
+/* __________________________________________________________________________*/
 void editorDrawWelcomeMessage(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
 {
     /* Define 80xsizeof(char) array for welcome message. */
@@ -286,11 +300,13 @@ void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
     int i;
     for (i = 0; i < (*eConfPtr).screenrows; ++i)
     {
+        int filerow = i + (*eConfPtr).rowoff;
+
         /* 
          * Call 'editorDrawWelcomeMessage' at middle of the window height
          * when there's no data readed.
         */
-        if ( i >= (*eConfPtr).numrows )
+        if ( filerow >= (*eConfPtr).numrows )
         {
             if ( (*eConfPtr).numrows == 0 && i == (*eConfPtr).screenrows / 3 )
             {
@@ -304,13 +320,13 @@ void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
         /* When the datastructure is not empty write the rows to the buffer. */
         else
         {
-            int len = (*(((*eConfPtr).row)+i)).size;    /* Is the same as 'eConfPtr->row[i]->size' */
+            int len = (*(((*eConfPtr).row)+filerow)).size;    /* Is the same as 'eConfPtr->row[i]->size' */
             if ( len > (*eConfPtr).screencols ) len = (*eConfPtr).screencols;
-            aBufferAppend(aBufPtr, (*(((*eConfPtr).row)+i)).chars, len);    /* Is the same as 'eConfPtr->row[i]->chars' */
+            aBufferAppend(aBufPtr, (*(((*eConfPtr).row)+filerow)).chars, len);    /* Is the same as 'eConfPtr->row[i]->chars' */
         }
 
         /* 
-         * Clear the line right of the cursor (0K default argument).
+         * Clear the line right of the cursor 0K default argument).
          * 2K Erases the whole line.
          * 1K Erased the line left of the cursor.
         */
@@ -331,6 +347,8 @@ void editorDrawRows(editorconf* const eConfPtr, appendbuffer* const aBufPtr)
 /* __________________________________________________________________________*/
 void editorRefreshScreen(editorconf* const eConfPtr)
 {
+    editorScroll(eConfPtr);
+
     /* Initialize buffer. */
     appendbuffer aBuf = { NULL, 0 };
     appendbuffer* const aBufPtr = &aBuf;
@@ -472,16 +490,22 @@ void editorOpen(editorconf* const eConfPtr, char* const filename)
     /* Read every line till end of file is reached. */
     while ( (linelen = getline(&line, &linecap, fp)) != -1 )
     {
-        if ( linelen != -1 )
-        {
-            for ( ; linelen > 0 && ( *(line+(linelen-1)) == '\n' ||
-                                     *(line+(linelen-1)) == '\r');
-                                     linelen--);
+        for ( ; linelen > 0 && ( *(line+(linelen-1)) == '\n' ||
+                                 *(line+(linelen-1)) == '\r');
+                                 linelen--);
 
-            /* Call editorAppendRow. */
-            editorAppendRow(eConfPtr, line, linelen);    
+        /* Same as:
+        while ( linelen > 0 &&  ( *(line+(linelen-1)) == '\n' ||
+                                  *(line+(linelen-1)) == '\r'))
+        {
+            linelen--;
         }
+        */
+
+        /* Call editorAppendRow. */
+        editorAppendRow(eConfPtr, line, linelen);    
     } 
+
     /* Free allocated memory. */
     free(line);
 

@@ -63,6 +63,7 @@ static void initEditor()
     /* Initialize the cursor position. */
     (*eConfPtr).cursorX = 0;    /* X = Column. */
     (*eConfPtr).cursorY = 0;    /* Y = Row. */
+    (*eConfPtr).rowoff = 0;
     (*eConfPtr).numrows = 0;
     (*eConfPtr).row = NULL;
 
